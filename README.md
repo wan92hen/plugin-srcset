@@ -37,8 +37,21 @@ halo plugin install build/libs/plugin-srcset-1.0.0.jar --profile <profile>
 | --- | --- | --- |
 | `enabled` | `true` | 关闭后不再生成任何 `srcset` |
 | `widths` | `400,800,1200,1600` | 逗号分隔，生成 `?width=<值>` 候选；候选越多 CDN 需要生成的变体越多 |
+| `reencodedWidths` | `400,800` | WebP 专用（见下）；留空则沿用 `widths` |
 | `sizes` | `(max-width: 800px) 100vw, 768px` | 浏览器据此挑候选，应按主题正文列宽填写（JumpServer 主题正文列宽 768px）|
 | `skipExtensions` | 空 | 额外跳过的扩展名 |
+
+### 为什么 WebP 的候选更窄
+
+缩略图接口**只输出 JPEG**，即使源文件是 WebP（`?format=webp` / `fm` / `output` / `type` / `avif` 全部无效，实测仍返回 `image/jpeg`）。而在大尺寸下，JPEG 会比它替换掉的 WebP **更大**：
+
+```
+/upload/jumpserver_aws_console.webp   原图       81 KB  (1672x940 WebP)
+                                     ?width=800  44 KB  ← -46% ✓
+                                     ?width=1600 140 KB  ← +73% ✗
+```
+
+高分屏浏览器按 `sizes` 换算后恰好会挑**最宽**的候选（768px 列 + DPR 2 → 需要 1536px → 选 1600w），于是给 WebP 提供 1600w 反而会让这些页面变重。所以 WebP 默认只给到 800（`reencodedWidths`），PNG/JPEG 保持原格式、任何小于自然尺寸的候选都是净收益，沿用 `widths` 的四个候选。
 
 ## 行为边界（都有实测依据）
 

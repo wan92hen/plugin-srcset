@@ -79,7 +79,8 @@ public class SrcsetImageTagProcessor implements ElementTagPostProcessor {
             if (!ThumbnailCandidates.isResizable(src, extraSkip)) {
                 return Mono.empty();
             }
-            var widths = ThumbnailCandidates.parseWidths(config.getWidths());
+            var widths = ThumbnailCandidates.chooseWidths(src, config.getWidths(),
+                config.getReencodedWidths());
             if (widths.isEmpty()) {
                 return Mono.empty();
             }

@@ -30,6 +30,13 @@ public final class ThumbnailCandidates {
     /** Extensions whose thumbnails the endpoint refuses, or that need no resizing. */
     public static final Set<String> ALWAYS_SKIP = Set.of("gif", "svg", "ico");
 
+    /**
+     * Sources the endpoint re-encodes to JPEG. A JPEG at (nearly) the same pixel
+     * size is usually bigger than the WebP it came from, so these formats must be
+     * kept to modest widths — see {@link #chooseWidths}.
+     */
+    public static final Set<String> REENCODED_EXTENSIONS = Set.of("webp");
+
     /** Halo serves attachment thumbnails from this path prefix. */
     private static final String UPLOAD_PREFIX = "/upload/";
 
@@ -86,6 +93,32 @@ public final class ThumbnailCandidates {
             }
         }
         return List.copyOf(widths);
+    }
+
+    /**
+     * Pick the candidate widths for one source.
+     *
+     * <p>Measured on a live 2.26 site: for a WebP source the endpoint answers with
+     * JPEG, and at large widths that JPEG is <em>bigger</em> than the WebP it came
+     * from (81 KB 1672x940 WebP becomes a 140 KB 1600w JPEG). Retina browsers pick
+     * the widest candidate, so a WebP source must only be offered modest widths,
+     * otherwise the plugin would make those pages heavier. PNG/JPEG sources keep
+     * their own format, so every width below the natural size is a win there.</p>
+     *
+     * @param src the image source
+     * @param defaultWidthsCsv widths for sources that keep their format
+     * @param reencodedWidthsCsv widths for sources the endpoint re-encodes
+     * @return the widths to emit, or an empty list when there are none
+     */
+    public static List<Integer> chooseWidths(String src, String defaultWidthsCsv, String reencodedWidthsCsv) {
+        var extension = extensionOf(src);
+        if (REENCODED_EXTENSIONS.contains(extension)) {
+            var reencoded = parseWidths(reencodedWidthsCsv);
+            if (!reencoded.isEmpty()) {
+                return reencoded;
+            }
+        }
+        return parseWidths(defaultWidthsCsv);
     }
 
     /** Lowercase extension of the path, or an empty string when there is none. */

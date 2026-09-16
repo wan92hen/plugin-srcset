@@ -16,6 +16,13 @@ public class SrcsetConfig {
     /** Comma separated list of candidate widths. */
     private String widths = "400,800,1200,1600";
 
+    /**
+     * Candidate widths for sources the thumbnail endpoint re-encodes to JPEG
+     * (WebP). Kept narrower on purpose: a large JPEG is bigger than the WebP it
+     * replaces, so offering it would make retina pages heavier.
+     */
+    private String reencodedWidths = "400,800";
+
     /** Value written to the {@code sizes} attribute. */
     private String sizes = "(max-width: 800px) 100vw, 768px";
 
@@ -54,5 +61,13 @@ public class SrcsetConfig {
 
     public void setSkipExtensions(String skipExtensions) {
         this.skipExtensions = skipExtensions;
+    }
+
+    public String getReencodedWidths() {
+        return reencodedWidths;
+    }
+
+    public void setReencodedWidths(String reencodedWidths) {
+        this.reencodedWidths = reencodedWidths;
     }
 }

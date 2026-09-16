@@ -89,6 +89,23 @@ class ThumbnailCandidatesTest {
     }
 
     @Test
+    @DisplayName("WebP gets the narrower width list, other formats keep the full one")
+    void chooseWidths() {
+        // Measured: a large JPEG thumbnail of a WebP source is bigger than the
+        // source, and retina browsers pick the widest candidate.
+        assertEquals(List.of(400, 800),
+            ThumbnailCandidates.chooseWidths("/upload/a.webp", "400,800,1200,1600", "400,800"));
+        assertEquals(List.of(400, 800, 1200, 1600),
+            ThumbnailCandidates.chooseWidths("/upload/a.png", "400,800,1200,1600", "400,800"));
+        assertEquals(List.of(400, 800, 1200, 1600),
+            ThumbnailCandidates.chooseWidths("/upload/a.jpg", "400,800,1200,1600", "400,800"));
+        // A blank WebP list falls back to the shared one instead of emitting nothing.
+        assertEquals(List.of(400, 800, 1200, 1600),
+            ThumbnailCandidates.chooseWidths("/upload/a.webp", "400,800,1200,1600", ""));
+        assertEquals(List.of(), ThumbnailCandidates.chooseWidths("/upload/a.webp", "", ""));
+    }
+
+    @Test
     @DisplayName("buildSrcset appends width params and keeps existing ones")
     void buildSrcset() {
         assertEquals("/upload/a.webp?width=400 400w, /upload/a.webp?width=800 800w",

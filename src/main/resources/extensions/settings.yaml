@@ -18,6 +18,11 @@ spec:
           help: "逗号分隔。会为每张图片生成 ?width=<值> 的候选，默认 400,800,1200,1600。候选越多，CDN 需要生成的变体越多。"
           value: "400,800,1200,1600"
         - $formkit: text
+          name: reencodedWidths
+          label: WebP 的候选宽度
+          help: "缩略图接口会把 WebP 重新编码成 JPEG，大尺寸下反而比原图更大（实测 81 KB 的 WebP 在 1600w 下变成 140 KB），而高分屏浏览器恰好会挑最宽的候选。因此 WebP 默认只给到 800。留空则沿用上面的候选宽度。"
+          value: "400,800"
+        - $formkit: text
           name: sizes
           label: sizes 属性
           help: "浏览器据此挑选候选，应按主题正文列宽填写。本主题正文列为 768px，默认 (max-width: 800px) 100vw, 768px。"
