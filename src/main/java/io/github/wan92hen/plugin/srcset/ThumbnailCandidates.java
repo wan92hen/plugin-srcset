@@ -37,6 +37,15 @@ public final class ThumbnailCandidates {
      */
     public static final Set<String> REENCODED_EXTENSIONS = Set.of("webp");
 
+    /**
+     * Widths used for {@link #REENCODED_EXTENSIONS} when the setting is blank.
+     * A blank setting must mean "keep the safe default", not "remove the
+     * restriction": Halo writes an empty value for a field the user never saw,
+     * so an upgrade from a version without this setting would otherwise silently
+     * reintroduce the oversized-JPEG regression.
+     */
+    public static final String DEFAULT_REENCODED_WIDTHS_CSV = "400,800";
+
     /** Halo serves attachment thumbnails from this path prefix. */
     private static final String UPLOAD_PREFIX = "/upload/";
 
@@ -105,15 +114,24 @@ public final class ThumbnailCandidates {
      * otherwise the plugin would make those pages heavier. PNG/JPEG sources keep
      * their own format, so every width below the natural size is a win there.</p>
      *
+     * <p>A blank {@code reencodedWidthsCsv} keeps the safe default rather than
+     * falling back to the full width list; to give WebP every width, repeat the
+     * values in the setting explicitly.</p>
+     *
      * @param src the image source
      * @param defaultWidthsCsv widths for sources that keep their format
-     * @param reencodedWidthsCsv widths for sources the endpoint re-encodes
+     * @param reencodedWidthsCsv widths for sources the endpoint re-encodes;
+     *        blank or unusable input falls back to
+     *        {@link #DEFAULT_REENCODED_WIDTHS_CSV}
      * @return the widths to emit, or an empty list when there are none
      */
     public static List<Integer> chooseWidths(String src, String defaultWidthsCsv, String reencodedWidthsCsv) {
         var extension = extensionOf(src);
         if (REENCODED_EXTENSIONS.contains(extension)) {
             var reencoded = parseWidths(reencodedWidthsCsv);
+            if (reencoded.isEmpty()) {
+                reencoded = parseWidths(DEFAULT_REENCODED_WIDTHS_CSV);
+            }
             if (!reencoded.isEmpty()) {
                 return reencoded;
             }

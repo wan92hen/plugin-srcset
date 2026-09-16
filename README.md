@@ -37,7 +37,7 @@ halo plugin install build/libs/plugin-srcset-<version>.jar --profile <profile>
 | --- | --- | --- |
 | `enabled` | `true` | 关闭后不再生成任何 `srcset` |
 | `widths` | `400,800,1200,1600` | 逗号分隔，生成 `?width=<值>` 候选；候选越多 CDN 需要生成的变体越多 |
-| `reencodedWidths` | `400,800` | WebP 专用（见下）；留空则沿用 `widths` |
+| `reencodedWidths` | `400,800` | WebP 专用（见下）；**留空或填错都回退到这个默认值**，想让 WebP 用全部宽度就把 `widths` 原样再填一遍 |
 | `sizes` | `(max-width: 800px) 100vw, 768px` | 浏览器据此挑候选，应按主题正文列宽填写（JumpServer 主题正文列宽 768px）|
 | `skipExtensions` | 空 | 额外跳过的扩展名 |
 
@@ -52,6 +52,8 @@ halo plugin install build/libs/plugin-srcset-<version>.jar --profile <profile>
 ```
 
 高分屏浏览器按 `sizes` 换算后恰好会挑**最宽**的候选（768px 列 + DPR 2 → 需要 1536px → 选 1600w），于是给 WebP 提供 1600w 反而会让这些页面变重。所以 WebP 默认只给到 800（`reencodedWidths`），PNG/JPEG 保持原格式、任何小于自然尺寸的候选都是净收益，沿用 `widths` 的四个候选。
+
+`reencodedWidths` 留空（或填成无法解析的值）时**回退到内置默认 400,800，而不是回退到 `widths`**：Halo 会给「旧版本里不存在、升级后才出现」的设置项写入空值，如果空值意味着放开限制，从 1.0.0 升级上来的站点会静默地把上面的问题原样带回来。想让 WebP 也用全部宽度，就显式把 `widths` 的值再填一遍。
 
 ## 行为边界（都有实测依据）
 

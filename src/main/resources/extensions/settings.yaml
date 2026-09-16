@@ -20,7 +20,7 @@ spec:
         - $formkit: text
           name: reencodedWidths
           label: WebP 的候选宽度
-          help: "缩略图接口会把 WebP 重新编码成 JPEG，大尺寸下反而比原图更大（实测 81 KB 的 WebP 在 1600w 下变成 140 KB），而高分屏浏览器恰好会挑最宽的候选。因此 WebP 默认只给到 800。留空则沿用上面的候选宽度。"
+          help: "缩略图接口会把 WebP 重新编码成 JPEG，大尺寸下反而比原图更大（实测 81 KB 的 WebP 在 1600w 下变成 140 KB），而高分屏浏览器恰好会挑最宽的候选。因此 WebP 默认只给到 800。留空或填错都会回退到这个默认值；想让 WebP 用全部宽度，就把上面的候选宽度原样再填一遍。"
           value: "400,800"
         - $formkit: text
           name: sizes

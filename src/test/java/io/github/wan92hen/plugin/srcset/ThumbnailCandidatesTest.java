@@ -99,10 +99,21 @@ class ThumbnailCandidatesTest {
             ThumbnailCandidates.chooseWidths("/upload/a.png", "400,800,1200,1600", "400,800"));
         assertEquals(List.of(400, 800, 1200, 1600),
             ThumbnailCandidates.chooseWidths("/upload/a.jpg", "400,800,1200,1600", "400,800"));
-        // A blank WebP list falls back to the shared one instead of emitting nothing.
-        assertEquals(List.of(400, 800, 1200, 1600),
-            ThumbnailCandidates.chooseWidths("/upload/a.webp", "400,800,1200,1600", ""));
-        assertEquals(List.of(), ThumbnailCandidates.chooseWidths("/upload/a.webp", "", ""));
+        // A blank or unusable WebP list must keep the safe default, not widen:
+        // an upgrade from a version without the setting stores an empty value.
+        assertEquals(List.of(400, 800),
+            ThumbnailCandidates.chooseWidths("/upload/a.webp", "400,600,800,1200", ""));
+        assertEquals(List.of(400, 800),
+            ThumbnailCandidates.chooseWidths("/upload/a.webp", "400,600,800,1200", null));
+        assertEquals(List.of(400, 800),
+            ThumbnailCandidates.chooseWidths("/upload/a.webp", "400,600,800,1200", "abc"));
+        // Repeating the shared list explicitly is how you opt into all widths.
+        assertEquals(List.of(400, 600, 800, 1200),
+            ThumbnailCandidates.chooseWidths("/upload/a.webp", "400,600,800,1200", "400,600,800,1200"));
+        // The two lists are independent: an empty shared list still leaves WebP
+        // on its own default, and a format that keeps its format has nothing.
+        assertEquals(List.of(400, 800), ThumbnailCandidates.chooseWidths("/upload/a.webp", "", ""));
+        assertEquals(List.of(), ThumbnailCandidates.chooseWidths("/upload/a.png", "", ""));
     }
 
     @Test
