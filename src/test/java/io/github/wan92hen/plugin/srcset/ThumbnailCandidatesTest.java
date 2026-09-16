@@ -2,6 +2,7 @@ package io.github.wan92hen.plugin.srcset;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
@@ -114,6 +115,45 @@ class ThumbnailCandidatesTest {
         // on its own default, and a format that keeps its format has nothing.
         assertEquals(List.of(400, 800), ThumbnailCandidates.chooseWidths("/upload/a.webp", "", ""));
         assertEquals(List.of(), ThumbnailCandidates.chooseWidths("/upload/a.png", "", ""));
+    }
+
+    @Test
+    @DisplayName("a theme can opt an image out of the plugin")
+    void isOptedOut() {
+        assertTrue(ThumbnailCandidates.isOptedOut("off"));
+        assertTrue(ThumbnailCandidates.isOptedOut(" off "));
+        assertTrue(ThumbnailCandidates.isOptedOut("OFF"));
+        assertFalse(ThumbnailCandidates.isOptedOut("on"));
+        assertFalse(ThumbnailCandidates.isOptedOut(""));
+        assertFalse(ThumbnailCandidates.isOptedOut(null));
+    }
+
+    @Test
+    @DisplayName("an opted-out image is pinned to its original instead of left empty")
+    void pinnedSrcset() {
+        // Leaving srcset off would let Halo's own processor add its content-column
+        // candidates, which is exactly what the opt-out exists to prevent.
+        assertEquals("/upload/logo.png 1x", ThumbnailCandidates.pinnedSrcset("/upload/logo.png"));
+        assertEquals("https://cdn.example.com/a.png 1x", ThumbnailCandidates.pinnedSrcset("https://cdn.example.com/a.png"));
+    }
+
+    @Test
+    @DisplayName("sizes prefers a plausible declared width over the configured default")
+    void sizesFor() {
+        var configured = "(max-width: 800px) 100vw, 768px";
+        // A logo tile that declares its rendered width must not be sized as the
+        // 768px article column — that is what made browsers fetch 1600w logos.
+        assertEquals("160px", ThumbnailCandidates.sizesFor("160", configured));
+        assertEquals("160px", ThumbnailCandidates.sizesFor(" 160 ", configured));
+        assertEquals("1024px", ThumbnailCandidates.sizesFor("1024", configured));
+        // Larger values are intrinsic-size hints for CLS, not layout widths.
+        assertEquals(configured, ThumbnailCandidates.sizesFor("2503", configured));
+        assertEquals(configured, ThumbnailCandidates.sizesFor("100%", configured));
+        assertEquals(configured, ThumbnailCandidates.sizesFor("8", configured));
+        assertEquals(configured, ThumbnailCandidates.sizesFor(null, configured));
+        assertEquals(configured, ThumbnailCandidates.sizesFor("", configured));
+        assertNull(ThumbnailCandidates.sizesFor(null, ""));
+        assertEquals("300px", ThumbnailCandidates.sizesFor("300", "   "));
     }
 
     @Test

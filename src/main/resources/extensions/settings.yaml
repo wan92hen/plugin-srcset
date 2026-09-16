@@ -25,7 +25,7 @@ spec:
         - $formkit: text
           name: sizes
           label: sizes 属性
-          help: "浏览器据此挑选候选，应按主题正文列宽填写。本主题正文列为 768px，默认 (max-width: 800px) 100vw, 768px。"
+          help: "浏览器据此挑选候选，应按主题正文列宽填写。本主题正文列为 768px，默认 (max-width: 800px) 100vw, 768px。图片自己的 sizes 属性不会被覆盖，图片的 width 属性（≤1024）也会优先使用。小图请用 data-srcset=\"off\" 标记，例如 <img src=\"/upload/logo.png\" data-srcset=\"off\">。"
           value: "(max-width: 800px) 100vw, 768px"
         - $formkit: text
           name: skipExtensions

@@ -49,6 +49,21 @@ public final class ThumbnailCandidates {
     /** Halo serves attachment thumbnails from this path prefix. */
     private static final String UPLOAD_PREFIX = "/upload/";
 
+    /**
+     * Attribute a theme can put on an {@code <img>} to keep the plugin away from
+     * it, e.g. {@code <img src="/upload/logo.png" data-srcset="off">}. Needed for
+     * images that are displayed far smaller than the configured {@code sizes}
+     * (logo walls, badges) — there the endpoint's re-encoded variants are bigger
+     * than the already small original, so any srcset is a loss.
+     */
+    public static final String OPT_OUT_ATTRIBUTE = "data-srcset";
+
+    /** Value of {@link #OPT_OUT_ATTRIBUTE} meaning "leave this image alone". */
+    public static final String OPT_OUT_VALUE = "off";
+
+    /** Declared widths above this are treated as intrinsic-size hints, not layout. */
+    private static final int MAX_DECLARED_WIDTH = 1024;
+
     /** Query parameters that already pin a size. */
     private static final Set<String> SIZE_PARAMS = Set.of("width", "height", "size");
 
@@ -137,6 +152,55 @@ public final class ThumbnailCandidates {
             }
         }
         return parseWidths(defaultWidthsCsv);
+    }
+
+    /** True when {@code value} asks the plugin to skip this image. */
+    public static boolean isOptedOut(String value) {
+        return value != null && OPT_OUT_VALUE.equalsIgnoreCase(value.trim());
+    }
+
+    /**
+     * Single-candidate srcset that pins an image to its original file.
+     *
+     * <p>Skipping the image is not enough: Halo itself (since 2.19,
+     * {@code ThumbnailImgTagPostProcessor}) adds a srcset with a content-column
+     * {@code sizes} to every attachment image that has none, so an opted-out
+     * image would immediately be claimed by core. An existing {@code srcset} is
+     * what core checks, so writing one candidate at {@code 1x} — which resolves
+     * to the original on every screen — keeps both processors away.</p>
+     */
+    public static String pinnedSrcset(String src) {
+        return src + " 1x";
+    }
+
+    /**
+     * Value for the {@code sizes} attribute of one image.
+     *
+     * <p>A theme that declares how wide the image is rendered (the {@code width}
+     * attribute) knows better than the configured default, which describes the
+     * article column and is therefore wrong for anything else on the page. Only
+     * plausible layout widths are trusted: a large declared width is usually an
+     * intrinsic-size hint for CLS, and using it would make the browser fetch the
+     * widest candidate on every screen.</p>
+     *
+     * @param declaredWidth the {@code width} attribute of the tag, may be null
+     * @param configuredSizes the {@code sizes} value from the settings
+     * @return the value to emit, or null when there is nothing to emit
+     */
+    public static String sizesFor(String declaredWidth, String configuredSizes) {
+        var fallback = configuredSizes == null || configuredSizes.isBlank() ? null : configuredSizes.trim();
+        if (declaredWidth == null || declaredWidth.isBlank()) {
+            return fallback;
+        }
+        try {
+            var width = Integer.parseInt(declaredWidth.trim());
+            if (width >= MIN_WIDTH && width <= MAX_DECLARED_WIDTH) {
+                return width + "px";
+            }
+        } catch (NumberFormatException ignored) {
+            // A percentage or CSS length is not a layout hint we can use.
+        }
+        return fallback;
     }
 
     /** Lowercase extension of the path, or an empty string when there is none. */

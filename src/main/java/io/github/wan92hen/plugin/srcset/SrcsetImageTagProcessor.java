@@ -65,10 +65,26 @@ public class SrcsetImageTagProcessor implements ElementTagPostProcessor {
             return Mono.empty();
         }
         var trimmedSrc = src.get().trim();
+        // Small images (logo walls, badges) are worse off with any candidate.
+        // They get a pinned single candidate instead, so that Halo's own
+        // processor does not pick them up either.
+        if (ThumbnailCandidates.isOptedOut(attributeValue(tag, ThumbnailCandidates.OPT_OUT_ATTRIBUTE))) {
+            return pinned(context, tag, trimmedSrc);
+        }
         return settingFetcher.fetch(SETTING_GROUP, SrcsetConfig.class)
             .defaultIfEmpty(new SrcsetConfig())
             .filter(SrcsetConfig::isEnabled)
             .flatMap(config -> build(context, tag, trimmedSrc, config));
+    }
+
+    private Mono<IProcessableElementTag> pinned(ITemplateContext context, IProcessableElementTag tag, String src) {
+        try {
+            return Mono.just(context.getModelFactory()
+                .setAttribute(tag, "srcset", ThumbnailCandidates.pinnedSrcset(src)));
+        } catch (RuntimeException e) {
+            log.warn("Failed to pin {} to its original: {}", src, e.toString());
+            return Mono.empty();
+        }
     }
 
     private Mono<IProcessableElementTag> build(ITemplateContext context, IProcessableElementTag tag,
@@ -87,8 +103,12 @@ public class SrcsetImageTagProcessor implements ElementTagPostProcessor {
             var modelFactory = context.getModelFactory();
             var newTag = modelFactory.setAttribute(tag, "srcset",
                 ThumbnailCandidates.buildSrcset(src, widths));
-            if (StringUtils.hasText(config.getSizes())) {
-                newTag = modelFactory.setAttribute(newTag, "sizes", config.getSizes().trim());
+            // A sizes attribute the theme wrote itself is never overwritten.
+            if (!tag.hasAttribute("sizes")) {
+                var sizes = ThumbnailCandidates.sizesFor(attributeValue(tag, "width"), config.getSizes());
+                if (sizes != null) {
+                    newTag = modelFactory.setAttribute(newTag, "sizes", sizes);
+                }
             }
             result = Mono.just(newTag);
         } catch (RuntimeException e) {
@@ -96,5 +116,9 @@ public class SrcsetImageTagProcessor implements ElementTagPostProcessor {
             log.warn("Failed to add srcset to {}: {}", src, e.toString());
         }
         return result;
+    }
+
+    private static String attributeValue(IProcessableElementTag tag, String name) {
+        return Optional.ofNullable(tag.getAttribute(name)).map(IAttribute::getValue).orElse(null);
     }
 }
