@@ -15,7 +15,7 @@ Halo 插件：**为没有 `srcset` 的图片自动补上响应式候选**，候�
 
 ```bash
 ./gradlew build
-# 产物：build/libs/plugin-srcset-1.0.0.jar
+# 产物：build/libs/plugin-srcset-<version>.jar
 ```
 
 > wrapper 默认使用官方发行包（`gradle-9.4.0-bin.zip`）。
@@ -28,7 +28,7 @@ Halo 插件：**为没有 `srcset` 的图片自动补上响应式候选**，候�
 在 Halo 控制台「插件 → 安装」上传 JAR，或：
 
 ```bash
-halo plugin install build/libs/plugin-srcset-1.0.0.jar --profile <profile>
+halo plugin install build/libs/plugin-srcset-<version>.jar --profile <profile>
 ```
 
 ## 设置项
