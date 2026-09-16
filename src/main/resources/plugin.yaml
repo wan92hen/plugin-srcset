@@ -1,0 +1,24 @@
+# Refer https://docs.halo.run/developer-guide/plugin/basics/manifest
+
+apiVersion: plugin.halo.run/v1alpha1
+kind: Plugin
+metadata:
+  # The name defines how the plugin is invoked, A unique name
+  name: plugin-srcset
+spec:
+  enabled: true
+  requires: ">=2.26.0"
+  author:
+    name: wan92hen
+    website: https://github.com/wan92hen
+  logo: logo.svg
+  homepage: https://github.com/wan92hen/halo-plugin-srcset#readme
+  repo: https://github.com/wan92hen/halo-plugin-srcset
+  issues: https://github.com/wan92hen/halo-plugin-srcset/issues
+  displayName: "Srcset 响应式图片"
+  description: "渲染主题模板时为缺少 srcset 的图片补上基于 Halo 缩略图接口的响应式候选，减少图片流量。"
+  settingName: plugin-srcset-settings
+  configMapName: plugin-srcset-configmap
+  license:
+    - name: "GPL-3.0"
+      url: "https://github.com/wan92hen/halo-plugin-srcset/blob/main/LICENSE"

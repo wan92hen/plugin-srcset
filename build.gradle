@@ -1,0 +1,43 @@
+plugins {
+    id 'java'
+    id "run.halo.plugin.devtools" version "0.8.0"
+}
+
+group 'io.github.wan92hen'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation platform('run.halo.tools.platform:plugin:2.26.0')
+    compileOnly 'run.halo.app:api'
+
+    testImplementation 'run.halo.app:api'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 21
+}
+
+// Provided by the devtools plugin; it invokes Task.project at execution time.
+tasks.named('generatePluginComponentsIdx') {
+    notCompatibleWithConfigurationCache('This task invokes "Task.project" at execution time.')
+}
+
+halo {
+    version = '2.26'
+}

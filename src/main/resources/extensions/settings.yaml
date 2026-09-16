@@ -1,0 +1,29 @@
+apiVersion: v1alpha1
+kind: Setting
+metadata:
+  name: plugin-srcset-settings
+spec:
+  forms:
+    - group: basic
+      label: 基础设置
+      formSchema:
+        - $formkit: switch
+          name: enabled
+          label: 启用
+          help: 关闭后不再为任何图片生成 srcset。
+          value: true
+        - $formkit: text
+          name: widths
+          label: 候选宽度
+          help: "逗号分隔。会为每张图片生成 ?width=<值> 的候选，默认 400,800,1200,1600。候选越多，CDN 需要生成的变体越多。"
+          value: "400,800,1200,1600"
+        - $formkit: text
+          name: sizes
+          label: sizes 属性
+          help: "浏览器据此挑选候选，应按主题正文列宽填写。本主题正文列为 768px，默认 (max-width: 800px) 100vw, 768px。"
+          value: "(max-width: 800px) 100vw, 768px"
+        - $formkit: text
+          name: skipExtensions
+          label: 额外跳过的扩展名
+          help: "逗号分隔。gif / svg / ico 始终跳过：Halo 缩略图接口对 GIF 返回 403，而 srcset 候选失败不会回退到 src，会让图片直接坏掉。"
+          value: ""
